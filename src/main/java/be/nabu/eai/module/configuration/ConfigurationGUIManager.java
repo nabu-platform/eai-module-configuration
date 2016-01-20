@@ -36,11 +36,16 @@ public class ConfigurationGUIManager extends BasePropertyOnlyGUIManager<Configur
 	@Override
 	public Collection<Property<?>> getModifiableProperties(ConfigurationArtifact instance) {
 		if (properties == null) {
-			properties = BaseConfigurationGUIManager.createProperty(new ComplexElementImpl(instance.getConfiguration().getType(), null));
-			for (Property<?> property : properties) {
-				if (property instanceof SimpleProperty) {
-					((SimpleProperty<?>) property).setEnvironmentSpecific(true);
+			try {
+				properties = BaseConfigurationGUIManager.createProperty(new ComplexElementImpl((ComplexType) instance.getConfiguration().getType(), null));
+				for (Property<?> property : properties) {
+					if (property instanceof SimpleProperty) {
+						((SimpleProperty<?>) property).setEnvironmentSpecific(true);
+					}
 				}
+			}
+			catch (IOException e) {
+				throw new RuntimeException(e);
 			}
 		}
 		return properties;
@@ -49,12 +54,12 @@ public class ConfigurationGUIManager extends BasePropertyOnlyGUIManager<Configur
 	@SuppressWarnings("unchecked")
 	@Override
 	public <V> V getValue(ConfigurationArtifact instance, Property<V> property) {
-		return (V) instance.getConfiguration().get(property.getName());
+		return (V) instance.getContent().get(property.getName());
 	}
 
 	@Override
 	public <V> void setValue(ConfigurationArtifact instance, Property<V> property, V value) {
-		instance.getConfiguration().set(property.getName(), value);
+		instance.getContent().set(property.getName(), value);
 	}
 
 	@Override
@@ -71,7 +76,7 @@ public class ConfigurationGUIManager extends BasePropertyOnlyGUIManager<Configur
 			throw new IllegalArgumentException("Expecting a type");
 		}
 		ConfigurationArtifact configurationArtifact = new ConfigurationArtifact(entry.getId(), entry.getContainer(), entry.getRepository());
-		configurationArtifact.setConfiguration(((ComplexType) value).newInstance());
+		configurationArtifact.getConfiguration().setType(value);
 		configurationArtifact.save(entry.getContainer());
 		return configurationArtifact;
 	}

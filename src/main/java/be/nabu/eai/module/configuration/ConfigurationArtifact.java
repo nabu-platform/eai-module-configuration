@@ -2,16 +2,15 @@ package be.nabu.eai.module.configuration;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
 import be.nabu.eai.repository.api.Repository;
+import be.nabu.eai.repository.artifacts.jaxb.JAXBArtifact;
 import be.nabu.libs.resources.api.ManageableContainer;
 import be.nabu.libs.resources.api.ReadableResource;
-import be.nabu.libs.resources.api.WritableResource;
 import be.nabu.libs.resources.api.Resource;
 import be.nabu.libs.resources.api.ResourceContainer;
+import be.nabu.libs.resources.api.WritableResource;
 import be.nabu.libs.services.api.DefinedService;
 import be.nabu.libs.services.api.ExecutionContext;
 import be.nabu.libs.services.api.Service;
@@ -20,12 +19,10 @@ import be.nabu.libs.services.api.ServiceInstance;
 import be.nabu.libs.services.api.ServiceInterface;
 import be.nabu.libs.types.api.ComplexContent;
 import be.nabu.libs.types.api.ComplexType;
-import be.nabu.libs.types.api.DefinedType;
 import be.nabu.libs.types.base.ComplexElementImpl;
 import be.nabu.libs.types.base.ValueImpl;
 import be.nabu.libs.types.binding.api.Window;
 import be.nabu.libs.types.binding.xml.XMLBinding;
-import be.nabu.libs.types.java.BeanResolver;
 import be.nabu.libs.types.properties.NillableProperty;
 import be.nabu.libs.types.structure.Structure;
 import be.nabu.utils.io.IOUtils;
@@ -33,65 +30,58 @@ import be.nabu.utils.io.api.ByteBuffer;
 import be.nabu.utils.io.api.ReadableContainer;
 import be.nabu.utils.io.api.WritableContainer;
 
-public class ConfigurationArtifact implements DefinedService {
+public class ConfigurationArtifact extends JAXBArtifact<Configuration> implements DefinedService {
 
-	private String id;
-	private Repository repository;
-	private ComplexContent configuration;
-	private ResourceContainer<?> directory;
+	private ComplexContent content;
 	private Structure input = new Structure();
 	private Structure output;
 	
 	public ConfigurationArtifact(String id, ResourceContainer<?> directory, Repository repository) {
-		this.id = id;
-		this.directory = directory;
-		this.repository = repository;
-	}
-	
-	@Override
-	public String getId() {
-		return id;
+		super(id, directory, repository, "meta.xml", Configuration.class);
 	}
 
-	public Repository getRepository() {
-		return repository;
-	}
-	
-	public ComplexContent getConfiguration() {
-		if (configuration == null) {
+	public ComplexContent getContent() {
+		if (content == null) {
 			synchronized(this) {
-				if (configuration == null) {
-					XMLBinding binding = new XMLBinding((ComplexType) BeanResolver.getInstance().resolve(Object.class), Charset.forName("UTF-8"));
-					Resource child = directory.getChild("configuration.xml");
-					if (child == null) {
-						throw new IllegalStateException("Missing configuration file");
-					}
+				if (content == null) {
 					try {
-						ReadableContainer<ByteBuffer> readable = ((ReadableResource) child).getReadable();
-						try {
-							configuration = binding.unmarshal(IOUtils.toInputStream(readable), new Window[0]);
+						Resource child = getDirectory().getChild("configuration.xml");
+						if (child == null) {
+							content = ((ComplexType) getConfiguration().getType()).newInstance();
 						}
-						finally {
-							readable.close();
+						else {
+							XMLBinding binding = new XMLBinding((ComplexType) getConfiguration().getType(), Charset.forName("UTF-8"));
+							try {
+								ReadableContainer<ByteBuffer> readable = ((ReadableResource) child).getReadable();
+								try {
+									content = binding.unmarshal(IOUtils.toInputStream(readable), new Window[0]);
+								}
+								finally {
+									readable.close();
+								}
+							}
+							catch (Exception e) {
+								throw new RuntimeException(e);
+							}
 						}
 					}
-					catch (Exception e) {
+					catch (IOException e) {
 						throw new RuntimeException(e);
 					}
 				}
 			}
 		}
-		return configuration;
+		return content;
 	}
 	
-	public void setConfiguration(ComplexContent configuration) {
-		this.configuration = configuration;
+	public void setContent(ComplexContent content) {
+		this.content = content;
 	}
 
 	public void save(ResourceContainer<?> container) throws IOException {
-		ComplexContent content = getConfiguration();
-//		XMLBinding binding = new XMLBinding(content.getType(), Charset.forName("UTF-8"));
-		XMLBinding binding = new XMLBinding((ComplexType) BeanResolver.getInstance().resolve(Object.class), Charset.forName("UTF-8"));
+		super.save(container);
+		ComplexContent content = getContent();
+		XMLBinding binding = new XMLBinding((ComplexType) getConfiguration().getType(), Charset.forName("UTF-8"));
 		Resource child = container.getChild("configuration.xml");
 		if (child == null) {
 			child = ((ManageableContainer<?>) container).create("configuration.xml", "application/xml");
@@ -116,9 +106,14 @@ public class ConfigurationArtifact implements DefinedService {
 			public ComplexType getOutputDefinition() {
 				if (output == null) {
 					synchronized(ConfigurationArtifact.this) {
-						Structure output = new Structure();
-						output.add(new ComplexElementImpl("configuration", getConfiguration().getType(), output));
-						ConfigurationArtifact.this.output = output;
+						try {
+							Structure output = new Structure();
+							output.add(new ComplexElementImpl("configuration", (ComplexType) getConfiguration().getType(), output));
+							ConfigurationArtifact.this.output = output;
+						}
+						catch (IOException e) {
+							throw new RuntimeException(e);
+						}
 					}
 				}
 				return output;
@@ -140,7 +135,7 @@ public class ConfigurationArtifact implements DefinedService {
 			@Override
 			public ComplexContent execute(ExecutionContext executionContext, ComplexContent input) throws ServiceException {
 				ComplexContent newInstance = getServiceInterface().getOutputDefinition().newInstance();
-				newInstance.set("configuration", getConfiguration());
+				newInstance.set("configuration", getContent());
 				return newInstance;
 			}
 		};
@@ -148,6 +143,7 @@ public class ConfigurationArtifact implements DefinedService {
 
 	@Override
 	public Set<String> getReferences() {
-		return new HashSet<String>(Arrays.asList(((DefinedType) getConfiguration().getType()).getId()));
+		return null;
 	}
+
 }
