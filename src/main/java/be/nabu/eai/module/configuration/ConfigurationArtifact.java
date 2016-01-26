@@ -38,6 +38,7 @@ public class ConfigurationArtifact extends JAXBArtifact<Configuration> implement
 	
 	public ConfigurationArtifact(String id, ResourceContainer<?> directory, Repository repository) {
 		super(id, directory, repository, "meta.xml", Configuration.class);
+		input.setName("input");
 	}
 
 	public ComplexContent getContent() {
@@ -108,6 +109,7 @@ public class ConfigurationArtifact extends JAXBArtifact<Configuration> implement
 					synchronized(ConfigurationArtifact.this) {
 						try {
 							Structure output = new Structure();
+							output.setName("output");
 							output.add(new ComplexElementImpl("configuration", (ComplexType) getConfiguration().getType(), output));
 							ConfigurationArtifact.this.output = output;
 						}
