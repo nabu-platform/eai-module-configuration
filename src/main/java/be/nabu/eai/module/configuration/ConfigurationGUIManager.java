@@ -94,4 +94,8 @@ public class ConfigurationGUIManager extends BasePropertyOnlyGUIManager<Configur
 		guiInstance.setArtifact(instance);
 	}
 
+	@Override
+	public String getCategory() {
+		return "Miscellaneous";
+	}
 }
