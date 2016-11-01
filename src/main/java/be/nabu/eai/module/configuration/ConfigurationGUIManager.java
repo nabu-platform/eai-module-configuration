@@ -23,6 +23,8 @@ import be.nabu.libs.types.api.DefinedType;
 
 public class ConfigurationGUIManager extends BasePortableGUIManager<ConfigurationArtifact, BaseArtifactGUIInstance<ConfigurationArtifact>> {
 
+	private ComplexContentEditor editor;
+
 	public ConfigurationGUIManager() {
 		super("Configuration", ConfigurationArtifact.class, new ConfigurationManager());
 	}
@@ -65,8 +67,8 @@ public class ConfigurationGUIManager extends BasePortableGUIManager<Configuratio
 
 	@Override
 	public void display(MainController controller, AnchorPane pane, ConfigurationArtifact artifact) throws IOException, ParseException {
-		ComplexContentEditor editor = new ComplexContentEditor(artifact.getContent(), true, artifact.getRepository());
-		Tree<ValueWrapper> build = editor.build();
+		editor = new ComplexContentEditor(artifact.getContent(), true, artifact.getRepository());
+		Tree<ValueWrapper> build = editor.getTree();
 		pane.getChildren().add(build);
 		build.getRootCell().expandedProperty().set(true);
 		AnchorPane.setRightAnchor(build, 0d);
