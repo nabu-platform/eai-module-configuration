@@ -1,31 +1,67 @@
 package be.nabu.eai.module.configuration;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-import javafx.scene.layout.AnchorPane;
-import be.nabu.eai.developer.ComplexContentEditor;
-import be.nabu.eai.developer.ComplexContentEditor.ValueWrapper;
 import be.nabu.eai.developer.MainController;
 import be.nabu.eai.developer.managers.base.BaseArtifactGUIInstance;
+import be.nabu.eai.developer.managers.base.BaseConfigurationGUIManager;
 import be.nabu.eai.developer.managers.base.BaseGUIManager;
-import be.nabu.eai.developer.managers.base.BasePortableGUIManager;
+import be.nabu.eai.developer.managers.base.BasePropertyOnlyGUIManager;
 import be.nabu.eai.developer.managers.util.SimpleProperty;
 import be.nabu.eai.repository.api.Entry;
+import be.nabu.eai.repository.api.Repository;
 import be.nabu.eai.repository.api.ResourceEntry;
 import be.nabu.eai.repository.resources.RepositoryEntry;
-import be.nabu.jfx.control.tree.Tree;
 import be.nabu.libs.property.api.Property;
 import be.nabu.libs.property.api.Value;
+import be.nabu.libs.types.api.ComplexType;
 import be.nabu.libs.types.api.DefinedType;
+import be.nabu.libs.types.base.ComplexElementImpl;
 
-public class ConfigurationGUIManager extends BasePortableGUIManager<ConfigurationArtifact, BaseArtifactGUIInstance<ConfigurationArtifact>> {
+public class ConfigurationGUIManagerOld extends BasePropertyOnlyGUIManager<ConfigurationArtifact, BaseArtifactGUIInstance<ConfigurationArtifact>> {
 
-	public ConfigurationGUIManager() {
+	public ConfigurationGUIManagerOld() {
 		super("Configuration", ConfigurationArtifact.class, new ConfigurationManager());
 	}
+	private List<Property<?>> properties;
+	
+	@Override
+	public Repository getRepository(ConfigurationArtifact instance) {
+		return instance.getRepository();
+	}
+
+	@Override
+	public Collection<Property<?>> getModifiableProperties(ConfigurationArtifact instance) {
+		if (properties == null) {
+			try {
+				properties = BaseConfigurationGUIManager.createProperty(new ComplexElementImpl((ComplexType) instance.getConfiguration().getType(), null));
+				for (Property<?> property : properties) {
+					if (property instanceof SimpleProperty) {
+						((SimpleProperty<?>) property).setEnvironmentSpecific(true);
+					}
+				}
+			}
+			catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return properties;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <V> V getValue(ConfigurationArtifact instance, Property<V> property) {
+		return (V) instance.getContent().get(property.getName());
+	}
+
+	@Override
+	public <V> void setValue(ConfigurationArtifact instance, Property<V> property, V value) {
+		instance.getContent().set(property.getName(), value);
+	}
+
 	@Override
 	protected List<Property<?>> getCreateProperties() {
 		List<Property<?>> properties = new ArrayList<Property<?>>();
@@ -61,16 +97,5 @@ public class ConfigurationGUIManager extends BasePortableGUIManager<Configuratio
 	@Override
 	public String getCategory() {
 		return "Miscellaneous";
-	}
-
-	@Override
-	public void display(MainController controller, AnchorPane pane, ConfigurationArtifact artifact) throws IOException, ParseException {
-		ComplexContentEditor editor = new ComplexContentEditor(artifact.getContent(), true, artifact.getRepository());
-		Tree<ValueWrapper> build = editor.build();
-		pane.getChildren().add(build);
-		build.getRootCell().expandedProperty().set(true);
-		AnchorPane.setRightAnchor(build, 0d);
-		AnchorPane.setTopAnchor(build, 0d);
-		AnchorPane.setLeftAnchor(build, 0d);
 	}
 }
