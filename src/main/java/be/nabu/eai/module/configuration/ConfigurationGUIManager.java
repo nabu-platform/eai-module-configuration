@@ -5,6 +5,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.AnchorPane;
 import be.nabu.eai.developer.ComplexContentEditor;
 import be.nabu.eai.developer.ComplexContentEditor.ValueWrapper;
@@ -68,11 +69,15 @@ public class ConfigurationGUIManager extends BasePortableGUIManager<Configuratio
 	@Override
 	public void display(MainController controller, AnchorPane pane, ConfigurationArtifact artifact) throws IOException, ParseException {
 		editor = new ComplexContentEditor(artifact.getContent(), true, artifact.getRepository());
+		ScrollPane scroll = new ScrollPane();
 		Tree<ValueWrapper> build = editor.getTree();
-		pane.getChildren().add(build);
 		build.getRootCell().expandedProperty().set(true);
-		AnchorPane.setRightAnchor(build, 0d);
-		AnchorPane.setTopAnchor(build, 0d);
-		AnchorPane.setLeftAnchor(build, 0d);
+		build.prefWidthProperty().bind(scroll.widthProperty());
+		scroll.setContent(build);
+		pane.getChildren().add(scroll);
+		AnchorPane.setRightAnchor(scroll, 0d);
+		AnchorPane.setTopAnchor(scroll, 0d);
+		AnchorPane.setLeftAnchor(scroll, 0d);
+		AnchorPane.setBottomAnchor(scroll, 0d);
 	}
 }
