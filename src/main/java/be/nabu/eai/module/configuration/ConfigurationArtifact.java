@@ -52,6 +52,7 @@ public class ConfigurationArtifact extends JAXBArtifact<Configuration> implement
 						}
 						else {
 							XMLBinding binding = new XMLBinding((ComplexType) getConfiguration().getType(), Charset.forName("UTF-8"));
+							binding.setIgnoreUndefined(true);
 							try {
 								ReadableContainer<ByteBuffer> readable = ((ReadableResource) child).getReadable();
 								try {
