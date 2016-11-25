@@ -5,8 +5,12 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
 import be.nabu.eai.developer.ComplexContentEditor;
 import be.nabu.eai.developer.ComplexContentEditor.ValueWrapper;
 import be.nabu.eai.developer.MainController;
@@ -72,8 +76,20 @@ public class ConfigurationGUIManager extends BasePortableGUIManager<Configuratio
 		ScrollPane scroll = new ScrollPane();
 		Tree<ValueWrapper> build = editor.getTree();
 		build.getRootCell().expandedProperty().set(true);
-		build.prefWidthProperty().bind(scroll.widthProperty());
-		scroll.setContent(build);
+		VBox box = new VBox();
+		box.prefWidthProperty().bind(scroll.widthProperty());
+		build.prefWidthProperty().bind(box.widthProperty());
+		CheckBox checkbox = new CheckBox("Is environment specific?");
+		checkbox.setSelected(artifact.getConfig().isEnvironmentSpecific());
+		checkbox.selectedProperty().addListener(new ChangeListener<Boolean>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> arg0, Boolean arg1, Boolean arg2) {
+				artifact.getConfig().setEnvironmentSpecific(arg2 != null && arg2);
+				controller.setChanged();
+			}
+		});
+		box.getChildren().addAll(checkbox, build);
+		scroll.setContent(box);
 		pane.getChildren().add(scroll);
 		AnchorPane.setRightAnchor(scroll, 0d);
 		AnchorPane.setTopAnchor(scroll, 0d);

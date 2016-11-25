@@ -8,6 +8,8 @@ import be.nabu.libs.types.api.DefinedType;
 
 @XmlRootElement(name = "meta")
 public class Configuration {
+	
+	private boolean environmentSpecific = true;
 	private DefinedType type;
 
 	@XmlJavaTypeAdapter(value = ArtifactXMLAdapter.class)
@@ -17,4 +19,11 @@ public class Configuration {
 	public void setType(DefinedType type) {
 		this.type = type;
 	}
+	public boolean isEnvironmentSpecific() {
+		return environmentSpecific;
+	}
+	public void setEnvironmentSpecific(boolean environmentSpecific) {
+		this.environmentSpecific = environmentSpecific;
+	}
+	
 }
