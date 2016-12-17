@@ -7,14 +7,16 @@ import be.nabu.eai.developer.ComplexContentEditor.ValueWrapper;
 import be.nabu.eai.developer.api.ArtifactMerger;
 import be.nabu.eai.repository.api.Repository;
 import be.nabu.jfx.control.tree.Tree;
+import be.nabu.libs.types.api.ComplexType;
+import be.nabu.libs.types.mask.MaskedContent;
 
 public class ConfigurationMerger implements ArtifactMerger<ConfigurationArtifact> {
 
 	@Override
 	public boolean merge(ConfigurationArtifact source, ConfigurationArtifact target, AnchorPane pane, Repository targetRepository) {
 		// do a verbatim copy of the target to the source, then allow you to edit it
-		if (source.getConfig().isEnvironmentSpecific()) {
-			source.setContent(target.getContent());
+		if (source.getConfig().isEnvironmentSpecific() && target != null) {
+			source.setContent(new MaskedContent(target.getContent(), (ComplexType) source.getConfig().getType()));
 		}
 		ComplexContentEditor editor = new ComplexContentEditor(source.getContent(), true, targetRepository);
 		Tree<ValueWrapper> build = editor.getTree();
