@@ -11,6 +11,8 @@ import javax.validation.constraints.NotNull;
 
 import be.nabu.eai.module.configuration.ConfigurationArtifact;
 import be.nabu.eai.repository.EAIResourceRepository;
+import be.nabu.eai.repository.events.ResourceEvent;
+import be.nabu.eai.repository.events.ResourceEvent.ResourceState;
 import be.nabu.libs.services.api.ExecutionContext;
 import be.nabu.libs.types.ComplexContentWrapperFactory;
 import be.nabu.libs.types.api.ComplexContent;
@@ -64,5 +66,10 @@ public class Services {
 		}
 		artifact.setContent((ComplexContent) configuration);
 		artifact.save(artifact.getDirectory());
+		
+		ResourceEvent event = new ResourceEvent();
+		event.setArtifactId(artifact.getId());
+		event.setState(ResourceState.UPDATE);
+		EAIResourceRepository.getInstance().getEventDispatcher().fire(event, this);
 	}
 }
