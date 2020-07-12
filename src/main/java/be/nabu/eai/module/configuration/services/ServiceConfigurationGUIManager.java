@@ -1,19 +1,10 @@
-package be.nabu.eai.module.configuration;
+package be.nabu.eai.module.configuration.services;
 
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.geometry.Insets;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import be.nabu.eai.developer.ComplexContentEditor;
 import be.nabu.eai.developer.ComplexContentEditor.ValueWrapper;
 import be.nabu.eai.developer.MainController;
@@ -21,51 +12,57 @@ import be.nabu.eai.developer.managers.base.BaseArtifactGUIInstance;
 import be.nabu.eai.developer.managers.base.BaseGUIManager;
 import be.nabu.eai.developer.managers.base.BasePortableGUIManager;
 import be.nabu.eai.developer.managers.util.SimpleProperty;
-import be.nabu.eai.developer.util.EAIDeveloperUtils;
 import be.nabu.eai.repository.api.Entry;
 import be.nabu.eai.repository.api.ResourceEntry;
 import be.nabu.eai.repository.resources.RepositoryEntry;
 import be.nabu.jfx.control.tree.Tree;
 import be.nabu.libs.property.api.Property;
 import be.nabu.libs.property.api.Value;
-import be.nabu.libs.types.api.DefinedType;
+import be.nabu.libs.services.api.DefinedService;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.geometry.Insets;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
 
-public class ConfigurationGUIManager extends BasePortableGUIManager<ConfigurationArtifact, BaseArtifactGUIInstance<ConfigurationArtifact>> {
+public class ServiceConfigurationGUIManager extends BasePortableGUIManager<ServiceConfigurationArtifact, BaseArtifactGUIInstance<ServiceConfigurationArtifact>> {
 
 	private ComplexContentEditor editor;
 
-	public ConfigurationGUIManager() {
-		super("Configuration", ConfigurationArtifact.class, new ConfigurationManager());
+	public ServiceConfigurationGUIManager() {
+		super("Configured Service", ServiceConfigurationArtifact.class, new ServiceConfigurationManager());
 	}
 	@Override
 	protected List<Property<?>> getCreateProperties() {
 		List<Property<?>> properties = new ArrayList<Property<?>>();
-		properties.add(new SimpleProperty<DefinedType>("Type", DefinedType.class, true));
+		properties.add(new SimpleProperty<DefinedService>("Service", DefinedService.class, true));
 		return properties;
 	}
 
 	@Override
-	protected ConfigurationArtifact newInstance(MainController controller, RepositoryEntry entry, Value<?>...values) throws IOException {
-		DefinedType value = BaseGUIManager.getValue("Type", DefinedType.class, values);
+	protected ServiceConfigurationArtifact newInstance(MainController controller, RepositoryEntry entry, Value<?>...values) throws IOException {
+		DefinedService value = BaseGUIManager.getValue("Service", DefinedService.class, values);
 		if (value == null) {
-			throw new IllegalArgumentException("Expecting a type");
+			throw new IllegalArgumentException("Expecting a service");
 		}
-		ConfigurationArtifact configurationArtifact = new ConfigurationArtifact(entry.getId(), entry.getContainer(), entry.getRepository());
-		configurationArtifact.getConfiguration().setType(value);
+		ServiceConfigurationArtifact configurationArtifact = new ServiceConfigurationArtifact(entry.getId(), entry.getContainer(), entry.getRepository());
+		configurationArtifact.getConfiguration().setService(value);
 		configurationArtifact.save(entry.getContainer());
 		return configurationArtifact;
 	}
 
 	@Override
-	protected BaseArtifactGUIInstance<ConfigurationArtifact> newGUIInstance(Entry entry) {
-		return new BaseArtifactGUIInstance<ConfigurationArtifact>(this, entry);
+	protected BaseArtifactGUIInstance<ServiceConfigurationArtifact> newGUIInstance(Entry entry) {
+		return new BaseArtifactGUIInstance<ServiceConfigurationArtifact>(this, entry);
 	}
 	@Override
-	protected void setEntry(BaseArtifactGUIInstance<ConfigurationArtifact> guiInstance, ResourceEntry entry) {
+	protected void setEntry(BaseArtifactGUIInstance<ServiceConfigurationArtifact> guiInstance, ResourceEntry entry) {
 		guiInstance.setEntry(entry);
 	}
 	@Override
-	protected void setInstance(BaseArtifactGUIInstance<ConfigurationArtifact> guiInstance, ConfigurationArtifact instance) {
+	protected void setInstance(BaseArtifactGUIInstance<ServiceConfigurationArtifact> guiInstance, ServiceConfigurationArtifact instance) {
 		guiInstance.setArtifact(instance);
 	}
 
@@ -75,7 +72,7 @@ public class ConfigurationGUIManager extends BasePortableGUIManager<Configuratio
 	}
 
 	@Override
-	public void display(MainController controller, AnchorPane pane, ConfigurationArtifact artifact) throws IOException, ParseException {
+	public void display(MainController controller, AnchorPane pane, ServiceConfigurationArtifact artifact) throws IOException, ParseException {
 		editor = new ComplexContentEditor(artifact.getContent(), true, artifact.getRepository());
 		ScrollPane scroll = new ScrollPane();
 		Tree<ValueWrapper> build = editor.getTree();
@@ -94,18 +91,6 @@ public class ConfigurationGUIManager extends BasePortableGUIManager<Configuratio
 			}
 		});
 		box.getChildren().addAll(checkbox, build);
-		
-		TextField context = new TextField(artifact.getConfig().getContext());
-		context.textProperty().addListener(new ChangeListener<String>() {
-			@Override
-			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-				artifact.getConfig().setContext(newValue == null || newValue.trim().isEmpty() ? null : newValue.trim());
-				MainController.getInstance().setChanged();
-			}
-		});
-		HBox contextWrapper = EAIDeveloperUtils.newHBox("Context", context);
-		box.getChildren().add(contextWrapper);
-		
 		scroll.setContent(box);
 		pane.getChildren().add(scroll);
 		AnchorPane.setRightAnchor(scroll, 0d);

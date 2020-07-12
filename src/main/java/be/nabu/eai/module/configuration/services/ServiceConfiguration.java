@@ -1,24 +1,23 @@
-package be.nabu.eai.module.configuration;
+package be.nabu.eai.module.configuration.services;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import be.nabu.eai.repository.jaxb.ArtifactXMLAdapter;
-import be.nabu.libs.types.api.DefinedType;
+import be.nabu.libs.services.api.DefinedService;
 
 @XmlRootElement(name = "meta")
-public class Configuration {
-	
+public class ServiceConfiguration {
+		
 	private boolean environmentSpecific = true;
-	private DefinedType type;
-	private String context;
+	private DefinedService service;
 
 	@XmlJavaTypeAdapter(value = ArtifactXMLAdapter.class)
-	public DefinedType getType() {
-		return type;
+	public DefinedService getService() {
+		return service;
 	}
-	public void setType(DefinedType type) {
-		this.type = type;
+	public void setService(DefinedService service) {
+		this.service = service;
 	}
 	public boolean isEnvironmentSpecific() {
 		return environmentSpecific;
@@ -26,11 +25,5 @@ public class Configuration {
 	public void setEnvironmentSpecific(boolean environmentSpecific) {
 		this.environmentSpecific = environmentSpecific;
 	}
-	// like jdbc pools -> the context this is active in if asked
-	public String getContext() {
-		return context;
-	}
-	public void setContext(String context) {
-		this.context = context;
-	}
+	
 }
