@@ -1,0 +1,18 @@
+string definition = file.read("definition.xml")
+
+if (definition == null)
+	echo("Could not find definition of the configuration")
+	abort()
+
+meta = xml.objectify(file.read("meta.xml"))
+result = xml.objectify(file.read("configuration.xml"))
+
+parameters = parameters(definition, lambda(x, result[x]), meta/environmentSpecific == true)
+
+for (parameter : parameters)
+	if (parameter/list)
+		result[/parameter/name] = split("[\s]*,[\s]*", parameter/current)
+	else
+		result[/parameter/name] = parameter/current
+
+file.write("configuration.xml", xml.stringify(result))

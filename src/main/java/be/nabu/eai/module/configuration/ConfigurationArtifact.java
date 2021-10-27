@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Set;
 
+import be.nabu.eai.module.types.structure.StructureManager;
 import be.nabu.eai.repository.api.Repository;
 import be.nabu.eai.repository.artifacts.jaxb.JAXBArtifact;
 import be.nabu.libs.artifacts.api.ContextualArtifact;
@@ -95,6 +96,13 @@ public class ConfigurationArtifact extends JAXBArtifact<Configuration> implement
 		}
 		finally {
 			writable.close();
+		}
+		// we also write the definition in a standardized format because
+		// - we can't guarantee the definition is in the same project
+		// - we can't guarantee the definition is a structure
+		// we need the definition for merge scripts etc to know what is possible in the configuration rather than what is currently there
+		if (getConfig().getType() instanceof ComplexType) {
+			StructureManager.format(container, (ComplexType) getConfig().getType(), "definition.xml");
 		}
 	}
 
