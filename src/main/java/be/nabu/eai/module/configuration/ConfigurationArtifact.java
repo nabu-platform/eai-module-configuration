@@ -102,7 +102,7 @@ public class ConfigurationArtifact extends JAXBArtifact<Configuration> implement
 		// - we can't guarantee the definition is a structure
 		// we need the definition for merge scripts etc to know what is possible in the configuration rather than what is currently there
 		if (getConfig().getType() instanceof ComplexType) {
-			StructureManager.format(container, (ComplexType) getConfig().getType(), "definition.xml");
+			StructureManager.format(container, (ComplexType) getConfig().getType(), "definition.xml", true);
 		}
 	}
 
